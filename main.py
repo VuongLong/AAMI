@@ -1,23 +1,28 @@
 import numpy as np
 from preprocess import generate_patch_data, normalize
-from adaboost import ADABOOST
-from algorithm import Interpolation_T, Interpolation_F 
+from adaboost import *
+from algorithm import * 
 from utils import *
 from data import AN_T, AN_F, A1, original_A1
 
 def train_adaboost(AN, A1, interpolattion_type):
-	normalized_AN, _ = normalize(AN)
-	normalized_A1, _ = normalize(A1)
-	
+	normalized_AN, AN_MeanMat = normalize(AN)
 	original_A, original_A0, K = generate_patch_data(AN, A1, interpolattion_type)
-	normalized_A, normalized_A0, K = generate_patch_data(normalized_AN, normalized_A1, interpolattion_type)
+	normalized_A, normalized_A0 = [], []
+	for i in range(K):
+		normalized_A_i, _ = normalize(original_A[i])
+		normalized_A0_i, _ = normalize(original_A0[i])
+		normalized_A.append(normalized_A_i)
+		normalized_A0.append(normalized_A0_i)
 
 	if interpolattion_type == 'T':
-		interpolation = Interpolation_T(normalized_AN, normalized_A, normalized_A0, A1, K)
+		interpolation = Interpolation_T(normalized_AN, normalized_A, normalized_A0, A1, original_A1, AN_MeanMat, K)
 	else:
-		interpolation = Interpolation_F(normalized_AN, normalized_A, normalized_A0, A1, K)
+		interpolation = Interpolation_F(normalized_AN, normalized_A, normalized_A0, A1, original_A1, AN_MeanMat, K)
 
-	mapping, errors = ADABOOST(original_A, original_A0, interpolation, 1000)
+	#mapping, errors = ADABOOST(original_A, original_A0, interpolation, 30)
+	#mapping, errors = Test_ADABOOST(original_A, original_A0, interpolation, 30)
+	mapping, errors = ADABOOST_multi_filter(original_A, original_A0, interpolation, 0)
 	return mapping, errors
 
 if __name__ == '__main__':

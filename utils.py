@@ -20,7 +20,7 @@ def remove_joint(data):
 	return data 
 
 def read_tracking_data3D(data_dir, patch):
-	#print("reading source: ", data_dir, " patch: ", patch)
+	print("reading source: ", data_dir, " patch: ", patch)
 
 	Tracking3D = []
 	f=open(data_dir, 'r')

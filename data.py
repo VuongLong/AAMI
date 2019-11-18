@@ -12,7 +12,7 @@ for data_iter in range(len(REFERENCE_DIR)):
 	K = reference_data.shape[0] // PATCH_LENGTH
 	
 	list_patch += [np.copy(reference_data[i*PATCH_LENGTH:(i+1)*PATCH_LENGTH].T) for i in range(K)]
-
+	print(len(list_patch))
 AN_T = np.hstack(list_patch)
 AN_F = np.vstack(list_patch)
 

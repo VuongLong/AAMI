@@ -8,7 +8,7 @@ consider AN in T and F
 '''
 def normalize(A):
 	A = A.T
-	A_MeanVec = np.mean(A, 0)
+	A_MeanVec = A.sum(0) / (A != 0).sum(0)
 	A_MeanMat = np.tile(A_MeanVec, (A.shape[0], 1))
 	normalized_A = np.copy(A - A_MeanMat)
 	normalized_A[np.where(A == 0)] = 0 # value can be different from zeros after minusing mean
