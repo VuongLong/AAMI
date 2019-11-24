@@ -20,9 +20,9 @@ def train_adaboost(AN, A1, interpolattion_type):
 	else:
 		interpolation = Interpolation_F(normalized_AN, normalized_A, normalized_A0, A1, original_A1, AN_MeanMat, K)
 
-	#mapping, errors = ADABOOST(original_A, original_A0, interpolation, 30)
+	mapping, errors = ADABOOST(original_A, original_A0, interpolation, 1000)
 	#mapping, errors = Test_ADABOOST(original_A, original_A0, interpolation, 30)
-	mapping, errors = ADABOOST_multi_filter(original_A, original_A0, interpolation, 0)
+	#mapping, errors = ADABOOST_multi_filter(original_A, original_A0, interpolation, 10)
 	return mapping, errors
 
 if __name__ == '__main__':
@@ -35,4 +35,4 @@ if __name__ == '__main__':
 	print('A1', A1.shape)
 	
 	print("\nCompute Mapping Matrix")
-	mapping, errors = train_adaboost(AN_T, A1, 'T')
+	mapping, errors = train_adaboost(AN_T[:, 0:2200], A1, 'T')

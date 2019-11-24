@@ -7,14 +7,15 @@ def sign_threshold(error, threshold):
 		return 0
 	return 1
 
-def make_one_sample_error(original_A, original_A0, interpolation, mapping):
+def make_k_samples_error(original_A, original_A0, interpolation, mapping, k):
 	errors = np.zeros(interpolation.K)
 	for i in range(interpolation.K):
 		interpolated_A = interpolation.interpolate(original_A0[i], mapping)
 		errors[i] = MSE(original_A[i], interpolated_A, interpolation.missing_map)
-	errors[np.where(errors==np.max(errors))] = 0
+	threshold = np.sort(errors)[-k]
+	errors[np.where(errors < threshold)] = 0
 	errors[np.where(errors!=0)] = 1	
-	return 1 - errors
+	return errors
 
 def compute_sign_errors(original_A, original_A0, interpolation, mapping, threshold):
 	errors = np.zeros(interpolation.K)
@@ -37,21 +38,28 @@ def ADABOOST(original_A, original_A0, interpolation, R):
 	weights = np.array([1.0 for i in range(interpolation.K)])
 
 	for r in range(R):
+		# Normalize sample weights
+		#weights = weights / np.sum(weights)
+
 		# Compute general mapping matrix
 		mapping = interpolation.compute_weighted_mapping(weights)
 
 		# Computer errors and total_error
-		errors = make_one_sample_error(original_A, original_A0, interpolation, mapping)
+		errors = make_k_samples_error(original_A, original_A0, interpolation, mapping, 1)
 		
 		total_error = np.sum(weights*errors)
 		# Compute beta
-		beta = min(total_error / (1 - total_error),0.9)
+		beta = min(total_error / (1 - total_error),0.95)
 		# Compute alpha
 		alpha = np.log10(1 / beta)
+		print(beta)
 
 		# Compute new weights
 		for i in range(interpolation.K):
-			weights[i] = weights[i] * (beta ** (1-errors[i]))
+			weights[i] = weights[i] * (0.95 ** (1-errors[i]))
+			if errors[i]==1:
+				print(i)
+
 		#store mapping matrix and alpha
 		mappings.append(mapping)
 		#alphas.append(alpha)
@@ -63,19 +71,31 @@ def ADABOOST(original_A, original_A0, interpolation, R):
 		# Compute strong mapping matrix and observing errors
 		weighted_alphas = np.array(alphas, dtype=float)
 		weighted_alphas = weighted_alphas / np.sum(weighted_alphas)
-
 		final_mapping = np.zeros(mappings[0].shape)
-		for i in range(len(weighted_alphas)):
-			final_mapping += alphas[i] * mappings[i]
-		errors = compute_errors(original_A, original_A0, interpolation, final_mapping)
 		
+		for i in range(len(alphas)):
+			final_mapping = final_mapping + alphas[i] * mappings[i]
+		
+		errors = compute_errors(original_A, original_A0, interpolation, final_mapping)
 		final_mapping_error = np.sum(errors)
+		
+		
+		
 		final_mappings.append(final_mapping)
 		final_mapping_errors.append(final_mapping_error)
-		print('round: ', r, final_mapping_error)
-		interpolated_A1 = interpolation.interpolate(interpolation.A1, mapping)
+		interpolated_A1 = np.zeros(interpolation.A1.shape)
+		for i in range(len(alphas)):
+			interpolated_A1_i = interpolation.interpolate(interpolation.A1, mappings[i])
+			interpolated_A1  = interpolated_A1 + alphas[i]* interpolated_A1_i 
 		errors_A1 = MSE(interpolation.OA1, interpolated_A1, interpolation.missing_map)
-		print('A1', errors_A1)
+		
+		interpolated_A1 = interpolation.interpolate(interpolation.A1, final_mapping)
+		errors_A11 = MSE(interpolation.OA1, interpolated_A1, interpolation.missing_map)
+		
+		print('round: ', r, final_mapping_error, ' A1: ', errors_A1, errors_A11)
+
+		if r > 0 and final_mapping_error > final_mapping_errors[-2]:
+			break
 	return final_mappings[-1], final_mapping_errors
 
 def Test_ADABOOST(original_A, original_A0, interpolation, R):
@@ -89,14 +109,14 @@ def Test_ADABOOST(original_A, original_A0, interpolation, R):
 	for r in range(interpolation.K):
 		# Normalize sample weights
 		weights = np.array([1.0 for i in range(interpolation.K)])
-		weights[r] = 100.0
+		weights[r] = 20.0
 		#print(weights)
 		# Compute general mapping matrix
 		mapping = interpolation.compute_weighted_mapping(weights)
 
 		# Computer errors and total_error
 		errors = compute_errors(original_A, original_A0, interpolation, mapping)
-		print(errors[r] - errors_all[r])
+		print(np.sum(errors)-np.sum(errors_all), errors[r] - errors_all[r])
 	return 0, 0
 
 def calculate_threshold(original_A, original_A0, interpolation):
@@ -113,7 +133,7 @@ def calculate_threshold(original_A, original_A0, interpolation):
 			for j in range(interpolation.K):
 				if errors[i*interpolation.K + j] > errors[v]:
 					per += 1.0	
-			if per / interpolation.K <= 0.05:
+			if per / interpolation.K <= 0.5:
 				count += 1
 		if count == interpolation.K and errors[v] < threshold:
 			threshold = errors[v]
