@@ -35,4 +35,4 @@ if __name__ == '__main__':
 	print('A1', A1.shape)
 	
 	print("\nCompute Mapping Matrix")
-	mapping, errors = train_adaboost(AN_T[:, 0:2200], A1, 'T')
+	mapping, errors = train_adaboost(AN_T, A1, 'T')
