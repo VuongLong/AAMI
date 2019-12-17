@@ -1,7 +1,10 @@
 import numpy as np
 
 def MSE(A, B, missing_map):
-	return np.sum(np.abs(A - B) * missing_map) / np.sum(missing_map)
+	return np.sum(np.abs(A - B) * (1-missing_map)) / np.sum(missing_map)
+
+def ARE(predict, original):
+	return np.mean(np.abs((predict - original) / original))
 
 def mysvd(dataMat):
 	U, Sigma, VT = np.linalg.svd(dataMat)
@@ -18,6 +21,22 @@ def remove_joint(data):
 	data = np.delete(data, list_del, 1)
 	#print('removed joints data', data.shape)
 	return data 
+
+def euclid_dist(X, Y):
+	XX = np.asarray(X)
+	YY = np.asarray(Y)
+	return np.sqrt(np.sum(np.square(XX - YY)))
+
+def get_zero(matrix):
+	counter = 0
+	for x in matrix:
+		if x > 0.01: counter += 1
+	return counter
+
+def get_point(Data, frame, joint):
+	point = [ Data[frame, joint*3] , Data[frame, joint*3+1] , Data[frame, joint*3+2 ]]
+	return point
+
 
 def read_tracking_data3D(data_dir, patch):
 	print("reading source: ", data_dir, " patch: ", patch)
