@@ -30,7 +30,7 @@ data_iter = 0
 test_data, _  = read_tracking_data3D(TEST_DIR[data_iter], SELECTED_TEST_DATA[data_iter])
 original_A1 = test_data
 
-MISSING_MAP_DIR = "./fastsong/fastsong7/test_data_Aniage_num_gap/3/0_test.txt"
+MISSING_MAP_DIR = "./fastsong/fastsong7/test_data_Aniage_num_gap/5/0_test.txt"
 missing_map, _ = read_tracking_data3D_without_RJ(MISSING_MAP_DIR, SELECTED_TEST_DATA[1])
 
 A1 = original_A1 * missing_map

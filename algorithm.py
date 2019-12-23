@@ -298,7 +298,6 @@ class Interpolation16th_F():
 
 		self.compute_svd()
 		self.weight_sample = [1.0/self.K]*self.K
-		self.F_list = []
 		self.inner_compute_alpha()
 
 	def normalization(self):
@@ -427,35 +426,36 @@ class Interpolation16th_F():
 	def inner_compute_alpha(self):
 		# build list_alpha
 		list_Q = []
-		for iloop in range(K):
-			for kloop in range(K):
-				qi = matmul_list([list_V[kloop], list_F[kloop].T, list_V0[iloop], list_A0[iloop].T, 
-						diag_matrix(self.weight_sample[i], list_A[iloop].shape[0]), list_A[iloop]])
+		for iloop in range(self.K):
+			for kloop in range(self.K):
+				qi = matmul_list([self.list_V[kloop], self.list_F[kloop].T, self.list_V0[iloop].T, self.list_A0[iloop].T, 
+						diag_matrix(self.weight_sample[iloop], self.list_A[iloop].shape[0]), self.list_A[iloop]])
 				list_Q.append(qi)
 		tmp_matrix = np.zeros(list_Q[-1].shape)
 		for x in list_Q:
 			tmp_matrix += x
-		right_hand = tmp_matrix.reshape(tmp_matrix.shape[0] * tmp_matrix.shape[1], 1)
+		tmp_matrix = tmp_matrix.reshape(tmp_matrix.shape[0] * tmp_matrix.shape[1], 1)
+		right_hand = np.copy(tmp_matrix)
 
 		list_P = []
-		for jloop in range(K):
+		for jloop in range(self.K):
 			list_Pijk = []
-			for iloop in range(K):
-				for kloop in range(K):
-					Pijk = matmul_list([list_V[kloop], list_F[kloop].T, list_V0[iloop].T, list_A0[iloop].T, 
-							diag_matrix(self.weight_sample[i], list_A0[iloop].shape[0]), list_A0[iloop], 
-							list_V0[iloop], list_F[jloop], list_V[jloop].T ])
+			for iloop in range(self.K):
+				for kloop in range(self.K):
+					Pijk = matmul_list([self.list_V[kloop], self.list_F[kloop].T, self.list_V0[iloop].T, self.list_A0[iloop].T, 
+							diag_matrix(self.weight_sample[iloop], self.list_A0[iloop].shape[0]), self.list_A0[iloop], 
+							self.list_V0[iloop], self.list_F[jloop], self.list_V[jloop].T ])
 					list_Pijk.append(Pijk)
 			tmp_matrix = np.zeros(list_Pijk[-1].shape)
 			for x in list_Pijk:
 				tmp_matrix += x
 			shape_x, shape_y = tmp_matrix.shape[0], tmp_matrix.shape[1]
-			tmp_matrix.reshape(shape_x * shape_y, 1)
-			list_P.append(tmp_matrix)
+			tmp_matrix = tmp_matrix.reshape(shape_x * shape_y, 1)
+			list_P.append(np.copy(tmp_matrix))
 
-		left_hand = np.vstack([ x for x list_P])
+		left_hand = np.hstack([ x for x in list_P])
 
-		self.F_list = np.linalg.lstsq(left_hand, right_hand, rcond = None)[0]
+		self.list_alpha = np.linalg.lstsq(left_hand, right_hand, rcond = None)[0]
 
 		return 0
 
@@ -464,7 +464,7 @@ class Interpolation16th_F():
 		reconstructData = np.copy(M_zero)
 		tmp_result = np.zeros(self.A1.shape)
 		for i in range(self.K):
-			tmp_result += self.weight_sample[i] * np.matmul(np.matmul(np.matmul(M_zero[-self.fix_leng:], self.list_V0[i]), 
+			tmp_result += diag_matrix(self.list_alpha[i], self.list_F[i].shape[0]) * np.matmul(np.matmul(np.matmul(M_zero[-self.fix_leng:], self.list_V0[i]), 
 											self.list_F[i]), self.list_V[i].T)
 
 		reconstructData[-self.fix_leng:] = tmp_result
@@ -485,7 +485,7 @@ class Interpolation16th_F():
 			current_original_sample = self.list_A[sample_idx]
 			tmp_result = np.zeros(current_missing_sample.shape)
 			for i in range(self.K):
-				tmp_result += self.weight_sample[i] * np.matmul(np.matmul(np.matmul(current_missing_sample, 
+				tmp_result += diag_matrix(self.list_alpha[i], self.list_F[i].shape[0]) * np.matmul(np.matmul(np.matmul(current_missing_sample, 
 												self.list_V0[i]), self.list_F[i]), self.list_V[i].T)
 			result_sample = np.copy(current_missing_sample)
 			result_sample[np.where(current_missing_sample == 0)] = tmp_result[np.where(current_missing_sample == 0)]
