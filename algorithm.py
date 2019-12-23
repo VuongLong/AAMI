@@ -298,6 +298,8 @@ class Interpolation16th_F():
 
 		self.compute_svd()
 		self.weight_sample = [1.0/self.K]*self.K
+		self.F_list = []
+		self.inner_compute_alpha()
 
 	def normalization(self):
 		AA = np.copy(self.combine_matrix)
@@ -433,7 +435,7 @@ class Interpolation16th_F():
 		tmp_matrix = np.zeros(list_Q[-1].shape)
 		for x in list_Q:
 			tmp_matrix += x
-
+		right_hand = tmp_matrix.reshape(tmp_matrix.shape[0] * tmp_matrix.shape[1], 1)
 
 		list_P = []
 		for jloop in range(K):
@@ -447,7 +449,13 @@ class Interpolation16th_F():
 			tmp_matrix = np.zeros(list_Pijk[-1].shape)
 			for x in list_Pijk:
 				tmp_matrix += x
+			shape_x, shape_y = tmp_matrix.shape[0], tmp_matrix.shape[1]
+			tmp_matrix.reshape(shape_x * shape_y, 1)
 			list_P.append(tmp_matrix)
+
+		left_hand = np.vstack([ x for x list_P])
+
+		self.F_list = np.linalg.lstsq(left_hand, right_hand, rcond = None)[0]
 
 		return 0
 
