@@ -22,47 +22,29 @@ class adaboost_8th():
 	def train(self):
 		for loop_i in range(self.iteration_lim):
 			current_function = self.list_function[-1]
-			accumulate_error_weight = 0
+			accumulate_error = 0
 			
 			# compute error for each sample
 			error_sample = current_function.interpolate_sample()
 			weight_sample = current_function.get_weight()
-			current_threshold = max(np.median(error_sample), 0.15)
 			
-			# print("end")
 			# compute error rate for function
-			while 1 > 0:
-				for x in range(self.number_sample):
-					if error_sample[x] > current_threshold:
-						accumulate_error_weight += weight_sample[x]
-				if accumulate_error_weight < 0.98:
-					break
-				current_threshold += 0.1
-				if current_threshold > 1:
-					break
-				accumulate_error_weight = 0
-			# print("info")
-			# print(current_threshold)
-			# print(error_sample)
-			# print(weight_sample)
-			# update distribution 
-			current_beta = accumulate_error_weight ** self.power_coefficient
+			for x in range(self.number_sample):
+				if error_sample[x] > self.threshold:
+					accumulate_error += weight_sample[x]
+
+			current_beta = accumulate_error ** self.power_coefficient
 			self.list_beta.append(current_beta)
 			new_distribution = []
 			accumulate_Z = 0
 			for x in range(self.number_sample):
-				if error_sample[x] <= current_threshold:
+				if error_sample[x] <= self.threshold:
 					new_distribution.append(weight_sample[x] * current_beta)
 				else:
 					new_distribution.append(weight_sample[x])
 				accumulate_Z += new_distribution[-1]
 			for x in range(self.number_sample):
 				new_distribution[x] = new_distribution[x] / accumulate_Z
-			# print("info")
-			# print(current_beta)
-			# print(accumulate_error_weight)
-			# print("end")
-			# update new function
 			new_function = copy.deepcopy(current_function)
 			new_function.set_weight(np.copy(new_distribution))
 			self.list_function.append(new_function)
