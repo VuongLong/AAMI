@@ -1,5 +1,17 @@
 import numpy as np
 
+def diag_matrix(value, k):
+	value_array = [value]*k
+	return np.diag(value_array)
+
+def matmul_list(matrix_list):
+	number_matrix = len(matrix_list)
+	result = np.copy(matrix_list[0])
+	for i in range(1, number_matrix):
+		result = np.matmul(result, matrix_list[i])
+	return result
+
+
 def MSE(A, B, missing_map):
 	return np.sum(np.abs(A - B) * (1-missing_map)) / np.sum(missing_map)
 

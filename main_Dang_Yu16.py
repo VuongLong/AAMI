@@ -6,14 +6,14 @@ from utils import *
 from data import AN_T, AN_F, A1, original_A1, missing_map
 import copy
 
-class adaboost_8th():
+class adaboost_16th():
 	def __init__(self, inner_function, number_loop = 10):
 		self.iteration_lim = number_loop
 		self.function = inner_function
 		self.list_function = []
 		self.list_function.append(self.function)
 		self.list_beta = []
-		self.threshold = 0.2
+		self.threshold = 0.01
 		self.power_coefficient = 4
 		self.number_sample = inner_function.get_number_sample()
 	def set_iteration(self, number):
@@ -22,7 +22,7 @@ class adaboost_8th():
 	def train(self):
 		for loop_i in range(self.iteration_lim):
 			current_function = self.list_function[-1]
-			accumulate_error = 0
+			accumulate_error_weight = 0
 			
 			# compute error for each sample
 			error_sample = current_function.interpolate_sample()
@@ -31,9 +31,8 @@ class adaboost_8th():
 			# compute error rate for function
 			for x in range(self.number_sample):
 				if error_sample[x] > self.threshold:
-					accumulate_error += weight_sample[x]
-
-			current_beta = accumulate_error ** self.power_coefficient
+					accumulate_error_weight += weight_sample[x]
+			current_beta = accumulate_error_weight ** self.power_coefficient
 			self.list_beta.append(current_beta)
 			new_distribution = []
 			accumulate_Z = 0
@@ -45,6 +44,7 @@ class adaboost_8th():
 				accumulate_Z += new_distribution[-1]
 			for x in range(self.number_sample):
 				new_distribution[x] = new_distribution[x] / accumulate_Z
+			# update new function
 			new_function = copy.deepcopy(current_function)
 			new_function.set_weight(np.copy(new_distribution))
 			self.list_function.append(new_function)
@@ -87,12 +87,11 @@ if __name__ == '__main__':
 	print("\nTest source:")
 	print('A1', A1.shape)
 	
-	interpolation = Interpolation8th_F(AN_F, A1)
+	interpolation = Interpolation16th_F(AN_F, A1)
 	result1 = interpolation.interpolate_missing()
 	print(MSE(result1, original_A1, missing_map))
-	boosting = adaboost_8th(interpolation)
-	boosting.train()
-	result2 = boosting.interpolate_accumulate()
-	print(MSE(result2, original_A1, missing_map))
-
-	interpolation2 = boosting.get_arbitrary_sample()
+	# boosting = adaboost_16th(interpolation)
+	# boosting.train()
+	# print(boosting.get_beta_info())
+	# result2 = boosting.interpolate_accumulate()
+	# print(MSE(result2, original_A1, missing_map))
