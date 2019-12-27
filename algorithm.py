@@ -395,11 +395,11 @@ class Interpolation16th_F():
 		M_zero = self.normed_matries[0]
 		N_nogap = self.normed_matries[1]
 		N_zero = self.normed_matries[2]
-		r = self.fix_leng
-		l = 0
+		r = N_zero.shape[0]
+		l = r - self.fix_leng
 		PQ_size = N_zero.shape[1]
 		ksmall = 0
-		while l <= r:
+		while l >= 0:
 			self.K += 1
 			tmp = np.copy(N_nogap[l:r])
 			self.list_A.append(np.copy(tmp))
@@ -413,9 +413,8 @@ class Interpolation16th_F():
 			_, tmp_Vsigma, tmp_V = np.linalg.svd(self.list_A[-1]/np.sqrt(self.list_A0[-1].shape[0]-1), full_matrices = False)
 			ksmall = max(ksmall, get_zero(tmp_Vsigma))
 			self.list_V.append(np.copy(tmp_V.T))
-			r += self.fix_leng
-			l += self.fix_leng
-			r = min(r, N_zero.shape[0])
+			r -= self.fix_leng
+			l -= self.fix_leng
 
 		for i in range(self.K):
 			self.list_V[i] = self.list_V[i][:, :ksmall]

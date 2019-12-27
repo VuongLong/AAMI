@@ -27,18 +27,13 @@ class adaboost_16th():
 			# compute error for each sample
 			error_sample = current_function.interpolate_sample()
 			alpha = current_function.get_alpha()
-			print(error_sample)
 			weight_sample = current_function.get_weight()
-			print(weight_sample)
-			print(alpha)
 			# compute error rate for function
 			for x in range(self.number_sample):
 				if error_sample[x] > self.threshold:
 					accumulate_error_weight += weight_sample[x]
 			current_beta = accumulate_error_weight ** self.power_coefficient
 			self.list_beta.append(current_beta)
-			print(accumulate_error_weight)
-			print(current_beta)
 			new_distribution = []
 			accumulate_Z = 0
 			for x in range(self.number_sample):
@@ -84,6 +79,15 @@ class adaboost_16th():
 	def get_arbitrary_sample(self, sample_idx = -1):
 		return self.list_function[sample_idx]
 
+def calculate_mae_matrix(X):
+	error_sum = np.sum(np.abs(X))
+	mse = np.sum(np.square(X))
+	print("debug")
+	print("mse: ",mse)
+	print("mae: ",error_sum)
+	print("end")
+	return error_sum / len(X)
+
 if __name__ == '__main__':
 
 	print("Reference source:")
@@ -98,6 +102,8 @@ if __name__ == '__main__':
 	print(MSE(result1, original_A1, missing_map))
 	boosting = adaboost_16th(interpolation) 
 	boosting.train()
-	print(boosting.get_beta_info())
+	# print(boosting.get_beta_info())
+	# print(boosting.get_arbitrary_sample().get_alpha())
 	result2 = boosting.interpolate_accumulate()
+	print(np.around(calculate_mae_matrix(original_A1[np.where(missing_map == 0)]- result2[np.where(missing_map == 0)]), decimals = 17))
 	print(MSE(result2, original_A1, missing_map))

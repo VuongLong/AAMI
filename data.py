@@ -24,13 +24,13 @@ AN_F = np.vstack(list_patch)
 
 
 #print('\n\n\nREADING TEST DATA')
-TEST_DIR = ["./fastsong/fastsong7.txt", "./fastsong/fastsong7.txt", "./fastsong/fastsong8.txt"]
-SELECTED_TEST_DATA = [[150, 250], [450, 550], [50, 150]]
+TEST_DIR = ["./fastsong/fastsong7.txt"]
+SELECTED_TEST_DATA = [[450, 550]]
 data_iter = 0
 test_data, _  = read_tracking_data3D(TEST_DIR[data_iter], SELECTED_TEST_DATA[data_iter])
 original_A1 = test_data
 
-MISSING_MAP_DIR = "./fastsong/fastsong7/test_data_Aniage_num_gap/5/0_test.txt"
-missing_map, _ = read_tracking_data3D_without_RJ(MISSING_MAP_DIR, SELECTED_TEST_DATA[1])
+MISSING_MAP_DIR = "./fastsong/fastsong7/test/10/15.txt"
+missing_map, _ = read_tracking_data3D_without_RJ(MISSING_MAP_DIR, SELECTED_TEST_DATA[0])
 
 A1 = original_A1 * missing_map
