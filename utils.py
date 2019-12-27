@@ -13,7 +13,7 @@ def matmul_list(matrix_list):
 
 
 def MSE(A, B, missing_map):
-	return np.sum(np.abs(A - B) * (1-missing_map)) / np.sum(missing_map)
+	return np.sum(np.abs(A - B) * (1-missing_map)) / np.sum(1-missing_map)
 
 def ARE(predict, original):
 	return np.mean(np.abs((predict - original) / original))

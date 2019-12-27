@@ -7,7 +7,7 @@ from data import AN_T, AN_F, A1, original_A1, missing_map
 import copy
 
 class adaboost_8th():
-	def __init__(self, inner_function, number_loop = 10):
+	def __init__(self, inner_function, number_loop = 40):
 		self.iteration_lim = number_loop
 		self.function = inner_function
 		self.list_function = []

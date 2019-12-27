@@ -7,13 +7,13 @@ from data import AN_T, AN_F, A1, original_A1, missing_map
 import copy
 
 class adaboost_16th():
-	def __init__(self, inner_function, number_loop = 10):
+	def __init__(self, inner_function, number_loop = 40):
 		self.iteration_lim = number_loop
 		self.function = inner_function
 		self.list_function = []
 		self.list_function.append(self.function)
 		self.list_beta = []
-		self.threshold = 0.01
+		self.threshold = 0.7
 		self.power_coefficient = 4
 		self.number_sample = inner_function.get_number_sample()
 	def set_iteration(self, number):
@@ -26,8 +26,8 @@ class adaboost_16th():
 			
 			# compute error for each sample
 			error_sample = current_function.interpolate_sample()
+			alpha = current_function.get_alpha()
 			weight_sample = current_function.get_weight()
-			
 			# compute error rate for function
 			for x in range(self.number_sample):
 				if error_sample[x] > self.threshold:
@@ -47,6 +47,7 @@ class adaboost_16th():
 			# update new function
 			new_function = copy.deepcopy(current_function)
 			new_function.set_weight(np.copy(new_distribution))
+			new_function.inner_compute_alpha()
 			self.list_function.append(new_function)
 
 	def get_beta_info(self):
@@ -90,8 +91,9 @@ if __name__ == '__main__':
 	interpolation = Interpolation16th_F(AN_F, A1)
 	result1 = interpolation.interpolate_missing()
 	print(MSE(result1, original_A1, missing_map))
-	# boosting = adaboost_16th(interpolation)
-	# boosting.train()
+	boosting = adaboost_16th(interpolation) 
+	boosting.train()
 	# print(boosting.get_beta_info())
-	# result2 = boosting.interpolate_accumulate()
-	# print(MSE(result2, original_A1, missing_map))
+	# print(boosting.get_arbitrary_sample().get_alpha())
+	result2 = boosting.interpolate_accumulate()
+	print(MSE(result2, original_A1, missing_map))
