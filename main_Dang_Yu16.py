@@ -79,15 +79,6 @@ class adaboost_16th():
 	def get_arbitrary_sample(self, sample_idx = -1):
 		return self.list_function[sample_idx]
 
-def calculate_mae_matrix(X):
-	error_sum = np.sum(np.abs(X))
-	mse = np.sum(np.square(X))
-	print("debug")
-	print("mse: ",mse)
-	print("mae: ",error_sum)
-	print("end")
-	return error_sum / len(X)
-
 if __name__ == '__main__':
 
 	print("Reference source:")
@@ -105,5 +96,4 @@ if __name__ == '__main__':
 	# print(boosting.get_beta_info())
 	# print(boosting.get_arbitrary_sample().get_alpha())
 	result2 = boosting.interpolate_accumulate()
-	print(np.around(calculate_mae_matrix(original_A1[np.where(missing_map == 0)]- result2[np.where(missing_map == 0)]), decimals = 17))
 	print(MSE(result2, original_A1, missing_map))
