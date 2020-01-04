@@ -50,7 +50,7 @@ def get_point(Data, frame, joint):
 	return point
 
 
-def read_tracking_data3D(data_dir, patch):
+def read_tracking_data3D(data_dir, patch, remove_mark = True):
 	print("reading source: ", data_dir, " patch: ", patch)
 
 	Tracking3D = []
@@ -67,8 +67,8 @@ def read_tracking_data3D(data_dir, patch):
 	Tracking3D = Tracking3D.astype(float)
 	Tracking3D = Tracking3D[patch[0]: patch[1]]
 	#print('patch data', Tracking3D.shape)
-
-	Tracking3D = remove_joint(Tracking3D)
+	if remove_mark :
+		Tracking3D = remove_joint(Tracking3D)
 	restore = np.copy(Tracking3D)
 	return Tracking3D, restore
 
