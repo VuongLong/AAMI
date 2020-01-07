@@ -16,7 +16,7 @@ class adaboost_16th():
 		self.threshold = 0.8
 		self.power_coefficient = 10
 		self.number_sample = inner_function.get_number_sample()
-		self.limit_error = 1.2
+		self.limit_error = 2
 		self.list_mean_error = []
 
 	def set_iteration(self, number):
@@ -87,6 +87,10 @@ class adaboost_16th():
 	def interpolate_accumulate(self):
 		if self.iteration_lim < 1:
 			return self.function.interpolate_missing()
+		for t in range(self.iteration_lim):
+			current_function = self.list_function[t]
+			result = current_function.interpolate_missing()
+			print("result1: ", MSE(result, original_A1, missing_map))
 		list_result = []
 		start_round = 0
 		if self.iteration_lim >= 2:
@@ -145,7 +149,9 @@ if __name__ == '__main__':
 	
 	interpolation = Interpolation16th_F(AN_F, A1)
 	result1 = interpolation.interpolate_missing()
+	result2 = interpolation.debug
 	print("result1: ", MSE(result1, original_A1, missing_map))
+	print("result2: ", MSE(result2, original_A1, missing_map))
 	boosting = adaboost_16th(interpolation) 
 	boosting.train()
 	# print(boosting.get_beta_info())

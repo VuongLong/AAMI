@@ -284,18 +284,16 @@ class Interpolation16th_F():
 		self.A1 = np.copy(missing_matrix)
 		self.AN_F = np.copy(reference_matrix)
 		self.combine_matrix = np.vstack((np.copy(reference_matrix), np.copy(missing_matrix)))
+		self.fix_leng = missing_matrix.shape[0]
 		self.normed_matries, self.reconstruct_matries = self.normalization()
 		self.K = 0
 		self.list_A = []
 		self.list_A0 = []
 		self.list_V = []
 		self.list_V0 = []
-		self.list_F = []
-		self.fix_leng = missing_matrix.shape[0]
+		self.list_F = []	
 		self.list_alpha = []
-
 		self.compute_svd()
-		self.weight_sample = [1.0/self.K]*self.K
 		self.inner_compute_alpha()
 
 	def normalization(self):
@@ -385,7 +383,7 @@ class Interpolation16th_F():
 		N_nogap = np.multiply(((N_nogap-m4)/ m5),m33)
 		N_zero = np.multiply(((N_zero-m6) / m5),m33)
 		
-		# m7 = np.ones((Data.shape[0],1))*mean_N_nogap
+		m7 = np.ones((Data.shape[0],1))*mean_N_nogap
 		
 		# ///////////////////////////////////////////////
 		# this peice of code to return result of original PCA method, return result into self.debug
@@ -393,27 +391,27 @@ class Interpolation16th_F():
 		# ///////////////////////////////////////////////
 
 
-		# _, Sigma_nogap , U_N_nogap_VH = np.linalg.svd(N_nogap/np.sqrt(N_nogap.shape[0]-1), full_matrices = False)
-		# U_N_nogap = U_N_nogap_VH.T
-		# _, Sigma_zero , U_N_zero_VH = np.linalg.svd(N_zero/np.sqrt(N_zero.shape[0]-1), full_matrices = False)
-		# U_N_zero = U_N_zero_VH.T
-		# ksmall = max(get_zero(Sigma_zero), get_zero(Sigma_nogap))
-		# U_N_nogap = U_N_nogap[:, :ksmall]
-		# U_N_zero = U_N_zero[:, :ksmall]
-		# T_matrix = np.matmul(U_N_nogap.T , U_N_zero)
-		# reconstructData = np.matmul(np.matmul(np.matmul(M_zero, U_N_zero), T_matrix), U_N_nogap.T)
+		_, Sigma_nogap , U_N_nogap_VH = np.linalg.svd(N_nogap/np.sqrt(N_nogap.shape[0]-1), full_matrices = False)
+		U_N_nogap = U_N_nogap_VH.T
+		_, Sigma_zero , U_N_zero_VH = np.linalg.svd(N_zero/np.sqrt(N_zero.shape[0]-1), full_matrices = False)
+		U_N_zero = U_N_zero_VH.T
+		ksmall = max(get_zero(Sigma_zero), get_zero(Sigma_nogap))
+		U_N_nogap = U_N_nogap[:, :ksmall]
+		U_N_zero = U_N_zero[:, :ksmall]
+		T_matrix = np.matmul(U_N_nogap.T , U_N_zero)
+		reconstructData = np.matmul(np.matmul(np.matmul(M_zero, U_N_zero), T_matrix), U_N_nogap.T)
 		
-		# # reverse normalization
-		# m7 = np.ones((Data.shape[0],1))*mean_N_nogap
-		# m8 = np.ones((reconstructData.shape[0],1))*stdev_N_no_gaps
-		# m3 = np.matmul( np.ones((M_zero.shape[0], 1)), column_weight)
-		# reconstructData = m7 + (np.multiply(reconstructData, m8) / m3)
-		# tmp = reconstructData + MeanMat
-		# result = np.copy(tmp)
+		# reverse normalization
+		m7 = np.ones((Data.shape[0],1))*mean_N_nogap
+		m8 = np.ones((reconstructData.shape[0],1))*stdev_N_no_gaps
+		m3 = np.matmul( np.ones((M_zero.shape[0], 1)), column_weight)
+		reconstructData = m7 + (np.multiply(reconstructData, m8) / m3)
+		tmp = reconstructData + MeanMat
+		result = np.copy(tmp)
 
-		# final_result = np.copy(self.combine_matrix)
-		# final_result[np.where(self.combine_matrix == 0)] = result[np.where(self.combine_matrix == 0)]
-		# self.debug = np.copy(final_result[-400:])
+		final_result = np.copy(self.combine_matrix)
+		final_result[np.where(self.combine_matrix == 0)] = result[np.where(self.combine_matrix == 0)]
+		self.debug = np.copy(final_result[-self.fix_leng:])
 		return [M_zero, N_nogap, N_zero], [m7, stdev_N_no_gaps, column_weight, MeanMat]
 
 	def compute_svd(self):
@@ -424,8 +422,13 @@ class Interpolation16th_F():
 		# l = r - self.fix_leng
 		r = self.fix_leng
 		l = 0
+		add_small_patch = False
 		ksmall = 0
-		while r <= N_zero.shape[0]:
+		while l <= r:
+			if r - l < 20: 
+				break
+			if r - l < self.fix_leng:
+				add_small_patch = True
 			self.K += 1
 			tmp = np.copy(N_nogap[l:r])
 			self.list_A.append(np.copy(tmp))
@@ -440,6 +443,7 @@ class Interpolation16th_F():
 			ksmall = max(ksmall, get_zero(tmp_Vsigma))
 			self.list_V.append(np.copy(tmp_V.T))
 			r += self.fix_leng
+			r = min(r, N_zero.shape[0])
 			l += self.fix_leng
 
 
@@ -455,12 +459,23 @@ class Interpolation16th_F():
 		ksmall = max(ksmall, get_zero(tmp_Vsigma))
 		self.list_V.append(np.copy(tmp_V.T))
 		self.K += 1
+		Vmatrix_size = self.list_V[-2].shape[1]
+		ksmall = min(ksmall, Vmatrix_size)
+
+		print("K info: ", self.K)
 		# /////////////////////end////////////////////////// 
 		for i in range(self.K):
 			self.list_V[i] = self.list_V[i][:, :ksmall]
 			self.list_V0[i] = self.list_V0[i][:, :ksmall]
 			self.list_F.append(np.matmul(self.list_V0[i].T, self.list_V[i]))
 
+		if add_small_patch:
+			self.weight_sample = [0.2/self.K]*self.K
+			self.weight_sample[-1] += 0.4
+			self.weight_sample[-2] += 0.4
+		else:
+			self.weight_sample = [0.6/self.K]*self.K
+			self.weight_sample[-1] += 0.4
 
 	def inner_compute_alpha(self):
 		# build list_alpha
@@ -496,6 +511,13 @@ class Interpolation16th_F():
 		tmp_alpha = np.linalg.lstsq(np.matmul(left_hand.T, left_hand), np.matmul(left_hand.T, right_hand), rcond = None)[0]
 		sum_alpha = np.sum(tmp_alpha)
 		self.list_alpha = np.copy(tmp_alpha/sum_alpha)
+		# 
+		# debug alpha
+		# 
+		# for x in range(len(self.list_alpha)):
+		# 	self.list_alpha[x] = 0
+		# self.list_alpha[-2] = 0.5
+		# self.list_alpha[-1] = 0.5
 		return 0
 
 	def interpolate_missing(self):
