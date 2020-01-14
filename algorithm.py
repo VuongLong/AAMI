@@ -425,7 +425,7 @@ class Interpolation16th_F():
 		add_small_patch = False
 		ksmall = 0
 		while l <= r:
-			if r - l < 20: 
+			if r - l < 10: 
 				break
 			if r - l < self.fix_leng:
 				add_small_patch = True

@@ -13,11 +13,12 @@ class adaboost_16th():
 		self.list_function = []
 		self.list_function.append(self.function)
 		self.list_beta = []
-		self.threshold = 0.8
-		self.power_coefficient = 10
+		self.threshold = 0.5
+		self.power_coefficient = 3
 		self.number_sample = inner_function.get_number_sample()
 		self.limit_error = 2
 		self.list_mean_error = []
+		self.partly_accumulate = []
 
 	def set_iteration(self, number):
 		self.iteration_lim = number
@@ -38,7 +39,7 @@ class adaboost_16th():
 				if (error_sample[index_maxError] > self.limit_error) and (index_maxPosition == -1):
 					index_maxPosition = loop_i
 			
-			self.threshold = np.median(error_sample)
+			# self.threshold = np.median(error_sample)
 			print("error_sample: ", error_sample)
 			print("threshold: ", self.threshold)
 			alpha = current_function.get_alpha()
@@ -74,6 +75,10 @@ class adaboost_16th():
 			for x in range(self.number_sample):
 				new_distribution[x] = new_distribution[x] / accumulate_Z
 			print("new_distribution: ", new_distribution)
+			self.partly_accumulate.append(self.interpolate_partly_accumulate(loop_i+1))
+			if self.partly_accumulate[-1] > last_weight:
+				self.iteration_lim = loop_i - 1
+				break
 			print("finish loop: ", loop_i)
 			# update new function
 			new_function = copy.deepcopy(current_function)
@@ -90,7 +95,7 @@ class adaboost_16th():
 		for t in range(self.iteration_lim):
 			current_function = self.list_function[t]
 			result = current_function.interpolate_missing()
-			print("result1: ", MSE(result, original_A1, missing_map))
+			print("result: ",t," ", MSE(result, original_A1, missing_map))
 		list_result = []
 		start_round = 0
 		if self.iteration_lim >= 2:
@@ -118,6 +123,21 @@ class adaboost_16th():
 		final_result = result / sum_beta
 		return final_result
 
+	def interpolate_partly_accumulate(self, loop_number):
+		list_result = []
+		sum_beta = 0
+		for t in range(loop_number):
+			current_function = self.list_function[t]
+			list_error = current_function.interpolate_sample()
+			function_beta = np.log(1/self.list_beta[t])
+			list_result.append(function_beta * np.asarray(list_error))
+			sum_beta += function_beta
+		current_result  = list_result[0]
+		for t in range(1, loop_number):
+			current_result += list_result[t]
+
+		final_result = current_result / sum_beta
+		return np.mean(final_result)
 
 	def get_distribution_sample(self):
 		list_distri = []
