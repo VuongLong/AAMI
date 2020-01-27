@@ -13,7 +13,7 @@ class adaboost_16th():
 		self.list_function = []
 		self.list_function.append(self.function)
 		self.list_beta = []
-		self.threshold = 2.0
+		self.threshold = 0.7
 		self.power_coefficient = 3
 		self.number_sample = inner_function.get_number_sample()
 		self.limit_error = 2
@@ -26,7 +26,7 @@ class adaboost_16th():
 	def train(self):
 		index_maxError = -1
 		index_maxPosition = -1
-		last_weight = 999
+		last_weight = 9999
 		for loop_i in range(self.iteration_lim):
 			print("looping: ", loop_i)
 			current_function = self.list_function[-1]
@@ -44,7 +44,6 @@ class adaboost_16th():
 			print("error_sample: ", error_sample)
 			print("threshold: ", self.threshold)
 			alpha = current_function.get_alpha()
-			print("alpha: ", alpha)
 			weight_sample = current_function.get_weight()
 			if (loop_i - index_maxPosition >= 10) and (index_maxPosition != -1):
 				weight_sample[index_maxError] = 0
@@ -78,9 +77,10 @@ class adaboost_16th():
 				new_distribution[x] = new_distribution[x] / accumulate_Z
 			print("new_distribution: ", new_distribution)
 			self.partly_accumulate.append(self.interpolate_partly_accumulate(loop_i+1))
-			if self.partly_accumulate[-1] > last_weight:
-				self.iteration_lim = loop_i - 1
-				break
+			# if self.partly_accumulate[-1] > last_weight:
+			# 	self.iteration_lim = loop_i - 1
+			# 	print("/////////////////stop training ADABOOST by last_weight/////////////")
+			# 	break
 			last_weight = self.partly_accumulate[-1]
 			print("finish loop: ", loop_i)
 			# update new function
@@ -101,7 +101,7 @@ class adaboost_16th():
 			print("result: ",t," ", MSE(result, original_A1, missing_map))
 		list_result = []
 		start_round = 0
-		if self.iteration_lim >= 3:
+		if self.iteration_lim >= 2:
 			for x in range(min(self.iteration_lim-1, 2)):
 				if (self.list_mean_error[x] < np.mean(np.asarray(self.list_mean_error[x+1:self.iteration_lim]))):
 					break
@@ -170,15 +170,12 @@ if __name__ == '__main__':
 	print("\nTest source:")
 	print('A1', A1.shape)
 	
-	interpolation = Interpolation16th_F(AN_F, A1)
+	interpolation = Interpolation16_original(AN_F, A1)
 	result1 = interpolation.interpolate_missing()
-	result2 = interpolation.debug
 	print("result1: ", MSE(result1, original_A1, missing_map))
-	print("result2: ", MSE(result2, original_A1, missing_map))
 	boosting = adaboost_16th(interpolation) 
 	boosting.train()
-	print(boosting.get_arbitrary_sample().get_alpha())
-	# print(boosting.get_beta_info())
+	# # print(boosting.get_beta_info())
 	result2 = boosting.interpolate_accumulate()
 	print(np.around(calculate_mae_matrix(original_A1[np.where(missing_map == 0)]- result2[np.where(missing_map == 0)]), decimals = 17))
-
+	print(boosting.partly_accumulate)

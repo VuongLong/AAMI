@@ -425,7 +425,7 @@ class Interpolation16th_F():
 		add_small_patch = False
 		ksmall = 0
 		while l <= r:
-			if r - l < 20: 
+			if r - l < 10: 
 				break
 			if r - l < self.fix_leng:
 				add_small_patch = True
@@ -450,17 +450,19 @@ class Interpolation16th_F():
 		# ///////////////////////////////////////////////
 		# this peice of code to add combine matrix to list
 		# /////////////////////begin//////////////////////////
-		self.list_A.append(np.copy(N_nogap))
-		self.list_A0.append(np.copy(N_zero))
-		_, tmp_V0sigma, tmp_V0 = np.linalg.svd(self.list_A0[-1]/np.sqrt(self.list_A0[-1].shape[0]-1), full_matrices = False)
-		ksmall = max(ksmall, get_zero(tmp_V0sigma))
-		self.list_V0.append(np.copy(tmp_V0.T))
-		_, tmp_Vsigma, tmp_V = np.linalg.svd(self.list_A[-1]/np.sqrt(self.list_A0[-1].shape[0]-1), full_matrices = False)
-		ksmall = max(ksmall, get_zero(tmp_Vsigma))
-		self.list_V.append(np.copy(tmp_V.T))
-		self.K += 1
-		Vmatrix_size = self.list_V[-2].shape[1]
-		ksmall = min(ksmall, Vmatrix_size)
+		# self.list_A.append(np.copy(N_nogap))
+		# self.list_A0.append(np.copy(N_zero))
+		# _, tmp_V0sigma, tmp_V0 = np.linalg.svd(self.list_A0[-1]/np.sqrt(self.list_A0[-1].shape[0]-1), full_matrices = False)
+		# ksmall = max(ksmall, get_zero(tmp_V0sigma))
+		# self.list_V0.append(np.copy(tmp_V0.T))
+		# _, tmp_Vsigma, tmp_V = np.linalg.svd(self.list_A[-1]/np.sqrt(self.list_A0[-1].shape[0]-1), full_matrices = False)
+		# ksmall = max(ksmall, get_zero(tmp_Vsigma))
+		# self.list_V.append(np.copy(tmp_V.T))
+		# self.K += 1
+		
+		if add_small_patch:
+			Vmatrix_size = self.list_V[-2].shape[1]
+			ksmall = min(ksmall, Vmatrix_size)	
 
 		print("K info: ", self.K)
 		# /////////////////////end////////////////////////// 
@@ -469,13 +471,14 @@ class Interpolation16th_F():
 			self.list_V0[i] = self.list_V0[i][:, :ksmall]
 			self.list_F.append(np.matmul(self.list_V0[i].T, self.list_V[i]))
 
-		if add_small_patch:
-			self.weight_sample = [0.2/self.K]*self.K
-			self.weight_sample[-1] += 0.4
-			self.weight_sample[-2] += 0.4
-		else:
-			self.weight_sample = [0.6/self.K]*self.K
-			self.weight_sample[-1] += 0.4
+		self.weight_sample = [1.0/self.K]*self.K
+		# if add_small_patch:
+		# 	self.weight_sample = [0.2/self.K]*self.K
+		# 	self.weight_sample[-1] += 0.4
+		# 	self.weight_sample[-2] += 0.4
+		# else:
+		# 	self.weight_sample = [0.6/self.K]*self.K
+		# 	self.weight_sample[-1] += 0.4
 
 	def inner_compute_alpha(self):
 		# build list_alpha
@@ -638,7 +641,8 @@ class Interpolation16_original():
 			self.list_A.append(np.copy(tmp))
 
 			tmp = np.copy(self.AN_norm[l:r])
-			tmp[:, columnwithgap] = 0
+			tmp[np.where(self.A1 == 0)] = 0
+			
 			self.list_A0.append(np.copy(tmp))
 			
 			_, tmp_V0sigma, tmp_V0 = np.linalg.svd(self.list_A0[-1]/np.sqrt(self.list_A0[-1].shape[0]-1), full_matrices = False)
