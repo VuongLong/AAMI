@@ -21,5 +21,5 @@ Data and parameter before runing:
 	algorithm: contains computing alpha function, svd, normalization, that correspond to our T F formular
 
 run:
-
+	cd Dr_YU
 	python main_DrYu_final.py
