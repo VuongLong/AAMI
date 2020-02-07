@@ -143,8 +143,8 @@ class Interpolation16_original():
 	def interpolate_missing(self):
 		tmp_result = np.zeros(self.A1.shape)
 		for i in range(self.K):
-			tmp_result += diag_matrix(self.list_alpha[i], self.list_F[i].shape[0]) * np.matmul(np.matmul(np.matmul(self.A1_norm, self.list_V0[i]), 
-											self.list_F[i]), self.list_V[i].T)
+			left_form = np.matmul(np.matmul(np.matmul(self.A1_norm, self.list_V0[i]), self.list_F[i]), self.list_V[i].T)
+			tmp_result += np.matmul(diag_matrix(self.list_alpha[i][0], left_form.shape[0]), left_form)
 		result = np.copy(self.A1_norm)
 		result[np.where(self.A1_norm == 0)] = tmp_result[np.where(self.A1_norm == 0)]
 		reconstructed =np.copy(result + self.A1_mean)
@@ -159,8 +159,8 @@ class Interpolation16_original():
 			current_original_sample = self.list_A[sample_idx]
 			tmp_result = np.zeros(current_missing_sample.shape)
 			for i in range(self.K):
-				tmp_result += diag_matrix(self.list_alpha[i], self.list_F[i].shape[0]) * np.matmul(np.matmul(np.matmul(current_missing_sample, 
-												self.list_V0[i]), self.list_F[i]), self.list_V[i].T)
+				left_form = np.matmul(np.matmul(np.matmul(current_missing_sample, self.list_V0[i]), self.list_F[i]), self.list_V[i].T)
+				tmp_result += np.matmul(diag_matrix(self.list_alpha[i][0], left_form.shape[0]), left_form)
 			result_sample = np.copy(current_missing_sample)
 			result_sample[np.where(current_missing_sample == 0)] = tmp_result[np.where(current_missing_sample == 0)]
 			list_error.append(ARE(result_sample, current_original_sample))
