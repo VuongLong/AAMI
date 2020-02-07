@@ -450,15 +450,15 @@ class Interpolation16th_F():
 		# ///////////////////////////////////////////////
 		# this peice of code to add combine matrix to list
 		# /////////////////////begin//////////////////////////
-		# self.list_A.append(np.copy(N_nogap))
-		# self.list_A0.append(np.copy(N_zero))
-		# _, tmp_V0sigma, tmp_V0 = np.linalg.svd(self.list_A0[-1]/np.sqrt(self.list_A0[-1].shape[0]-1), full_matrices = False)
-		# ksmall = max(ksmall, get_zero(tmp_V0sigma))
-		# self.list_V0.append(np.copy(tmp_V0.T))
-		# _, tmp_Vsigma, tmp_V = np.linalg.svd(self.list_A[-1]/np.sqrt(self.list_A0[-1].shape[0]-1), full_matrices = False)
-		# ksmall = max(ksmall, get_zero(tmp_Vsigma))
-		# self.list_V.append(np.copy(tmp_V.T))
-		# self.K += 1
+		self.list_A.append(np.copy(N_nogap))
+		self.list_A0.append(np.copy(N_zero))
+		_, tmp_V0sigma, tmp_V0 = np.linalg.svd(self.list_A0[-1]/np.sqrt(self.list_A0[-1].shape[0]-1), full_matrices = False)
+		ksmall = max(ksmall, get_zero(tmp_V0sigma))
+		self.list_V0.append(np.copy(tmp_V0.T))
+		_, tmp_Vsigma, tmp_V = np.linalg.svd(self.list_A[-1]/np.sqrt(self.list_A0[-1].shape[0]-1), full_matrices = False)
+		ksmall = max(ksmall, get_zero(tmp_Vsigma))
+		self.list_V.append(np.copy(tmp_V.T))
+		self.K += 1
 		
 		if add_small_patch:
 			Vmatrix_size = self.list_V[-2].shape[1]
@@ -528,8 +528,8 @@ class Interpolation16th_F():
 		reconstructData = np.copy(M_zero)
 		tmp_result = np.zeros(self.A1.shape)
 		for i in range(self.K):
-			tmp_result += diag_matrix(self.list_alpha[i], self.list_F[i].shape[0]) * np.matmul(np.matmul(np.matmul(M_zero[-self.fix_leng:, :], self.list_V0[i]), 
-											self.list_F[i]), self.list_V[i].T)
+			left_form = np.matmul(np.matmul(np.matmul(M_zero[-self.fix_leng:, :], self.list_V0[i]), self.list_F[i]), self.list_V[i].T)
+			tmp_result += np.matmul(diag_matrix(self.list_alpha[i][0], left_form.shape[0]), left_form)
 		reconstructData[-self.fix_leng:] = tmp_result
 		m8 = np.ones((reconstructData.shape[0],1))*self.reconstruct_matries[1]
 		m3 = np.matmul( np.ones((M_zero.shape[0], 1)), self.reconstruct_matries[2])
@@ -548,8 +548,8 @@ class Interpolation16th_F():
 			current_original_sample = self.list_A[sample_idx]
 			tmp_result = np.zeros(current_missing_sample.shape)
 			for i in range(self.K):
-				tmp_result += diag_matrix(self.list_alpha[i], self.list_F[i].shape[0]) * np.matmul(np.matmul(np.matmul(current_missing_sample, 
-												self.list_V0[i]), self.list_F[i]), self.list_V[i].T)
+				left_form = np.matmul(np.matmul(np.matmul(current_missing_sample, self.list_V0[i]), self.list_F[i]), self.list_V[i].T)
+				tmp_result += np.matmul(diag_matrix(self.list_alpha[i][0], left_form.shape[0]), left_form)
 			result_sample = np.copy(current_missing_sample)
 			result_sample[np.where(current_missing_sample == 0)] = tmp_result[np.where(current_missing_sample == 0)]
 			list_error.append(ARE(result_sample, current_original_sample))
